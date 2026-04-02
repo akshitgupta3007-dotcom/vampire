@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Vampire</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #090909;
+      --white:  #f0efe8;
+      --dim:    #888880;
+      --faint:  #161616;
+      --border: #1f1f1f;
+      --mid:    #2a2a2a;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+    }
+
+    /* grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.35;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    }
+
+    .wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      padding: 52px 0 36px;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(60px, 14vw, 96px);
+      font-weight: 300;
+      letter-spacing: -3px;
+      line-height: 1;
+      color: var(--white);
+    }
+
+    .tagline {
+      margin-top: 10px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #333;
+      text-transform: uppercase;
+    }
+
+    hr.divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ─── FORM ─── */
+    #loginSection {
+      padding: 40px 0 0;
+    }
+
+    .label {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: #383838;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    .field + .field { margin-top: 14px; }
+
+    .field input {
+      width: 100%;
+      background: var(--faint);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      padding: 15px 16px;
+      outline: none;
+      border-radius: 0;
+      -webkit-appearance: none;
+      transition: border-color .15s;
+    }
+    .field input::placeholder { color: #2c2c2c; }
+    .field input:focus { border-color: #383838; }
+
+    /* floating label */
+    .field {
+      position: relative;
+    }
+    .field span {
+      position: absolute;
+      top: -8px;
+      left: 12px;
+      background: var(--bg);
+      padding: 0 4px;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: #333;
+      text-transform: uppercase;
+    }
+
+    .btn-main {
+      width: 100%;
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--white);
+      color: var(--bg);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: opacity .15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-main:hover:not(:disabled) { opacity: .88; }
+    .btn-main:disabled { opacity: .35; cursor: not-allowed; }
+
+    .btn-main .loader {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 20%, rgba(0,0,0,.07) 50%, transparent 80%);
+      animation: sweep 1s infinite;
+    }
+    .btn-main.loading .loader { display: block; }
+    @keyframes sweep {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(100%);  }
+    }
+
+    .err {
+      margin-top: 14px;
+      padding: 13px 15px;
+      background: #0f0808;
+      border: 1px solid #2a1010;
+      color: #d97474;
+      font-size: 11px;
+      line-height: 1.7;
+      letter-spacing: .3px;
+      display: none;
+    }
+    .err.show { display: block; }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 10px;
+      color: #262626;
+      letter-spacing: 1px;
+      border-left: 1px solid #1c1c1c;
+      padding-left: 12px;
+      line-height: 1.8;
+    }
+
+    /* ─── RESULTS ─── */
+    #results {
+      display: none;
+      animation: up .35s ease;
+    }
+    #results.show { display: block; }
+    @keyframes up {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* profile */
+    .profile {
+      padding: 36px 0 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 300;
+      letter-spacing: -.5px;
+      margin-bottom: 14px;
+    }
+    .profile-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+      border: 1px solid #1c1c1c;
+      padding: 4px 10px;
+    }
+
+    /* overall */
+    .overall {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 20px;
+    }
+    .overall-label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: #333;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .overall-big {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 72px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -3px;
+    }
+    .overall-big.safe   { color: var(--white); }
+    .overall-big.warn   { color: #c8961a; }
+    .overall-big.danger { color: #b83030; }
+
+    .bunk-summary {
+      text-align: right;
+      font-size: 11px;
+      line-height: 1.9;
+      color: #444;
+    }
+    .bunk-summary strong { color: #666; }
+
+    /* subjects */
+    .subjects-section { padding-top: 28px; }
+    .subjects-header {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: #2e2e2e;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sub {
+      padding: 18px 0;
+      border-bottom: 1px solid #111;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      animation: up .3s ease backwards;
+    }
+    .sub:last-child { border-bottom: none; }
+
+    .sub-name {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.5;
+      letter-spacing: .3px;
+    }
+
+    .sub-right { text-align: right; }
+    .sub-pct {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 300;
+      line-height: 1;
+    }
+    .sub-pct.safe   { color: var(--white); }
+    .sub-pct.warn   { color: #c8961a; }
+    .sub-pct.danger { color: #b83030; }
+
+    .sub-frac {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    /* thin bar */
+    .bar {
+      height: 1px;
+      background: #151515;
+      margin-top: 8px;
+    }
+    .bar-inner {
+      height: 1px;
+      transition: width .7s cubic-bezier(.16,1,.3,1);
+    }
+    .bar-inner.safe   { background: #444; }
+    .bar-inner.warn   { background: #6b530d; }
+    .bar-inner.danger { background: #6b1515; }
+
+    .sub-bunk {
+      margin-top: 5px;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: #2a2a2a;
+    }
+    .sub-bunk .g { color: #3d7a48; }
+    .sub-bunk .r { color: #9a2828; }
+
+    /* notice box when no subjects */
+    .notice-box {
+      padding: 32px 0;
+      font-size: 11px;
+      color: #333;
+      letter-spacing: 1px;
+      line-height: 2;
+    }
+
+    /* logout */
+    .logout-area {
+      padding: 32px 0 20px;
+      border-top: 1px solid #111;
+      margin-top: 8px;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #1c1c1c;
+      color: #333;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .btn-ghost:hover { color: #666; border-color: #2e2e2e; }
+
+    footer {
+      padding: 20px 0 48px;
+      font-size: 9px;
+      color: #1e1e1e;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 480px) {
+      .logo { font-size: 58px; }
+      .overall-big { font-size: 56px; }
+      .overall { grid-template-columns: 1fr; gap: 10px; }
+      .bunk-summary { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">vampire</div>
+    <div class="tagline">a private tracker — by akshit gupta</div>
+  </header>
+  <hr class="divider" />
+
+  <!-- ── LOGIN ── -->
+  <section id="loginSection">
+    <div class="label">Chalkpad Access</div>
+
+    <div class="field">
+      <span>Username</span>
+      <input id="username" type="text" placeholder="Your Chalkpad username"
+             autocomplete="username" spellcheck="false" autocapitalize="none" />
+    </div>
+
+    <div class="field">
+      <span>Password</span>
+      <input id="password" type="password" placeholder="••••••••••"
+             autocomplete="current-password" />
+    </div>
+
+    <button class="btn-main" id="loginBtn" onclick="doLogin()">
+      <div class="loader"></div>
+      Access →
+    </button>
+
+    <div class="err" id="errBox"></div>
+
+    <p class="hint">
+      Uses your Chalkpad credentials — same username &amp; password.<br />
+      Nothing is stored. Session ends when you close this tab.
+    </p>
+  </section>
+
+  <!-- ── RESULTS ── -->
+  <section id="results">
+
+    <div class="profile" id="profileEl"></div>
+
+    <div class="overall" id="overallEl"></div>
+
+    <div class="subjects-section">
+      <div class="subjects-header">Subjects</div>
+      <div id="subjectsList"></div>
+    </div>
+
+    <div class="logout-area">
+      <button class="btn-ghost" onclick="doLogout()">← sign out</button>
+    </div>
+
+  </section>
+
+  <footer>vampire · chitkara · private</footer>
+</div>
+
+<script>
+  // ── config ──
+  const API = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001'
+    : '';                          // same origin when deployed
+
+  // ── helpers ──
+  const $ = id => document.getElementById(id);
+
+  function cls(pct) {
+    return pct >= 75 ? 'safe' : pct >= 65 ? 'warn' : 'danger';
+  }
+
+  function bunk(present, total) {
+    // can bunk: floor((p - 0.75t) / 0.75)
+    const canSkip = Math.floor((present - 0.75 * total) / 0.75);
+    // need attend: ceil((0.75t - p) / 0.25)
+    const needMore = Math.ceil((0.75 * total - present) / 0.25);
+    return {
+      canSkip: Math.max(canSkip, 0),
+      needMore: Math.max(needMore, 0),
+    };
+  }
+
+  function showErr(msg) {
+    const box = $('errBox');
+    box.textContent = msg;
+    box.classList.add('show');
+  }
+  function clearErr() { $('errBox').classList.remove('show'); }
+
+  // ── login ──
+  async function doLogin() {
+    clearErr();
+    const username = $('username').value.trim();
+    const password = $('password').value.trim();
+    if (!username || !password) { showErr('Please enter username and password.'); return; }
+
+    const btn = $('loginBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' Connecting…';
+
+    try {
+      const resp = await fetch(`${API}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await resp.json();
+
+      if (!resp.ok || !data.success) {
+        showErr(data.error || 'Login failed. Check your credentials.');
+        return;
+      }
+      render(data);
+    } catch (e) {
+      showErr('Cannot reach the server. Make sure the backend is running on port 3001.');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.childNodes[btn.childNodes.length - 1].textContent = ' Access →';
+    }
+  }
+
+  // ── render ──
+  function render({ profile, subjects, message }) {
+    // profile
+    const pEl = $('profileEl');
+    const pills = [
+      profile.rollNo   && `Roll: ${profile.rollNo}`,
+      profile.course   && profile.course,
+      profile.semester && `Sem ${profile.semester}`,
+      profile.section  && `Section ${profile.section}`,
+      profile.batch    && profile.batch,
+      profile.session  && profile.session,
+    ].filter(Boolean);
+
+    pEl.innerHTML = `
+      <div class="profile-name">${profile.name || 'Student'}</div>
+      <div class="profile-pills">
+        ${pills.map(p => `<div class="pill">${p}</div>`).join('')}
+      </div>`;
+
+    // overall
+    const oEl = $('overallEl');
+    if (subjects.length) {
+      const avg = Math.round(subjects.reduce((s,x) => s + x.percentage, 0) / subjects.length);
+      const totP = subjects.reduce((s,x) => s + x.present, 0);
+      const totT = subjects.reduce((s,x) => s + x.total, 0);
+      const { canSkip, needMore } = bunk(totP, totT);
+      const c = cls(avg);
+
+      oEl.innerHTML = `
+        <div>
+          <div class="overall-label">Overall Attendance</div>
+          <div class="overall-big ${c}">${avg}%</div>
+        </div>
+        <div class="bunk-summary">
+          ${c === 'safe'
+            ? `<strong style="color:#3d7a48">${canSkip}</strong> classes<br />you can skip`
+            : `<strong style="color:#b83030">${needMore}</strong> more classes<br />needed for 75%`}
+          <br /><span style="color:#2a2a2a">${totP}/${totT} attended</span>
+        </div>`;
+    } else {
+      oEl.innerHTML = `<div style="color:#333;font-size:11px;letter-spacing:1px;">No attendance data found.</div>`;
+    }
+
+    // subjects
+    const list = $('subjectsList');
+    if (!subjects.length) {
+      list.innerHTML = `<div class="notice-box">${message || 'No subjects found. Chalkpad layout may have changed.'}</div>`;
+    } else {
+      list.innerHTML = subjects.map((s, i) => {
+        const c = cls(s.percentage);
+        const { canSkip, needMore } = bunk(s.present, s.total);
+        const bunkLine = c === 'safe'
+          ? `<span class="g">Can skip ${canSkip}</span>`
+          : `<span class="r">Need ${needMore} more</span>`;
+        return `
+          <div class="sub" style="animation-delay:${i * 35}ms">
+            <div>
+              <div class="sub-name">${s.name}</div>
+              <div class="bar"><div class="bar-inner ${c}" style="width:${Math.min(s.percentage,100)}%"></div></div>
+              <div class="sub-bunk">${bunkLine}</div>
+            </div>
+            <div class="sub-right">
+              <div class="sub-pct ${c}">${s.percentage}%</div>
+              <div class="sub-frac">${s.present}/${s.total}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // show results, hide login
+    $('loginSection').style.display = 'none';
+    $('results').classList.add('show');
+  }
+
+  // ── logout ──
+  function doLogout() {
+    $('results').classList.remove('show');
+    $('loginSection').style.display = 'block';
+    $('username').value = '';
+    $('password').value = '';
+    clearErr();
+  }
+
+  // ── keyboard ──
+  document.addEventListener('DOMContentLoaded', () => {
+    $('username').addEventListener('keydown', e => { if (e.key === 'Enter') $('password').focus(); });
+    $('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  });
+</script>
+</body>
+</html>

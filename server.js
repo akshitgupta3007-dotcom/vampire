@@ -9,7 +9,7 @@ const { CookieJar } = require("tough-cookie");
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, "../frontend/public")));
+app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3001;
 
@@ -294,7 +294,7 @@ app.get("/api/health", (_, res) =>
 
 // Serve frontend
 app.get("*", (_, res) =>
-  res.sendFile(path.join(__dirname, "../frontend/public/index.html"))
+  res.sendFile(path.join(__dirname, "index.html"));
 );
 
 app.listen(PORT, () => {

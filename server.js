@@ -5,7 +5,6 @@ const cors = require("cors");
 const path = require("path");
 const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
-const https = require("https");
 
 const app = express();
 app.use(express.json());
@@ -43,7 +42,6 @@ function makeClient() {
       timeout: 45000,
       maxRedirects: 10,
       headers: HEADERS,
-      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     })
   );
 }

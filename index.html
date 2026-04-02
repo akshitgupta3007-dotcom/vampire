@@ -452,9 +452,9 @@
   // ── login ──
   async function doLogin() {
     clearErr();
-    const username = $('username').value.trim();
+    const uid = $('#uid').value.trim();
     const password = $('password').value.trim();
-    if (!username || !password) { showErr('Please enter username and password.'); return; }
+   if (!uid || !password)
 
     const btn = $('loginBtn');
     btn.disabled = true;
@@ -465,7 +465,7 @@
       const resp = await fetch(`${API}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ uid, password }),
       });
       const data = await resp.json();
 

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vampire — by Akshit Gupta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --black: #080808; --white: #f5f5f0; --gray-dark: #1a1a1a; --gray-faint: #1e1e1e; --gray-light: #888; }
+    body { background: var(--black); color: var(--white); font-family: 'Space Mono', monospace; min-height: 100vh; }
+    .container { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+    header { padding: 56px 0 48px; border-bottom: 1px solid #1c1c1c; }
+    .brand-name { font-family: 'Cormorant Garamond', serif; font-size: clamp(52px, 10vw, 88px); font-weight: 300; letter-spacing: -2px; line-height: 1; }
+    .brand-sub { font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+    section { padding: 40px 0; }
+    .login-section { padding-top: 48px; }
+    .section-label { font-size: 10px; letter-spacing: 4px; color: #444; text-transform: uppercase; margin-bottom: 28px; }
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-size: 10px; letter-spacing: 3px; color: #555; text-transform: uppercase; margin-bottom: 8px; }
+    .field input { width: 100%; background: var(--gray-faint); border: 1px solid #242424; color: var(--white); font-family: 'Space Mono', monospace; font-size: 14px; padding: 14px 16px; outline: none; transition: border-color 0.2s; border-radius: 0; -webkit-appearance: none; }
+    .field input::placeholder { color: #333; }
+    .field input:focus { border-color: #444; background: #141414; }
+    .btn { width: 100%; background: var(--white); color: var(--black); border: none; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; padding: 16px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .error-box { background: #130a0a; border: 1px solid #3a1010; color: #e57373; font-size: 12px; padding: 14px 16px; margin-top: 16px; line-height: 1.6; display: none; }
+    .error-box.show { display: block; }
+    .notice { font-size: 11px; color: #444; letter-spacing: 1px; border-left: 2px solid #222; padding-left: 14px; margin-top: 16px; line-height: 1.7; }
+    #results { display: none; animation: fadeUp 0.4s ease; }
+    #results.show { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-card { border: 1px solid #1c1c1c; padding: 24px; margin-bottom: 32px; position: relative; }
+    .profile-card::before { content: ''; position: absolute; top: 0; left: 0; width: 40px; height: 1px; background: var(--white); }
+    .profile-name { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; margin-bottom: 12px; }
+    .profile-meta { display: flex; flex-wrap: wrap; gap: 16px; }
+    .meta-item { font-size: 10px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+    .meta-item span { color: var(--gray-light); display: block; margin-top: 2px; }
+    .overall-card { border: 1px solid #1c1c1c; padding: 28px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .overall-label { font-size: 10px; letter-spacing: 3px; color: #444; text-transform: uppercase; }
+    .overall-pct { font-family: 'Cormorant Garamond', serif; font-size: 64px; font-weight: 300; line-height: 1; letter-spacing: -2px; }
+    .overall-pct.safe { color: var(--white); }
+    .overall-pct.warn { color: #d4a017; }
+    .overall-pct.danger { color: #c0392b; }
+    .bunk-info { text-align: right; font-size: 11px; color: #555; line-height: 1.8; }
+    .bunk-info strong { color: var(--gray-light); }
+    .subject-item { border-bottom: 1px solid #131313; padding: 20px 0; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; }
+    .subject-item:last-child { border-bottom: none; }
+    .subject-name { font-size: 13px; color: #ccc; line-height: 1.4; }
+    .subject-stats { text-align: right; }
+    .subject-pct { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; line-height: 1; }
+    .subject-pct.safe { color: var(--white); }
+    .subject-pct.warn { color: #d4a017; }
+    .subject-pct.danger { color: #c0392b; }
+    .subject-frac { font-size: 10px; color: #444; letter-spacing: 1px; margin-top: 3px; }
+    .bar-wrap { height: 1px; background: #1c1c1c; margin-top: 10px; }
+    .bar-fill { height: 1px; }
+    .bar-fill.safe { background: #555; }
+    .bar-fill.warn { background: #7a6010; }
+    .bar-fill.danger { background: #7a1010; }
+    .logout-wrap { padding: 40px 0 24px; border-top: 1px solid #131313; margin-top: 16px; }
+    .btn-ghost { background: transparent; color: #444; border: 1px solid #1c1c1c; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 12px 24px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .btn-ghost:hover { color: #888; border-color: #333; }
+    footer { padding: 24px 0 48px; font-size: 10px; color: #2a2a2a; letter-spacing: 2px; text-transform: uppercase; }
+    .empty { padding: 48px 0; text-align: center; color: #333; font-size: 12px; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand-name">vampire</div>
+      <div class="brand-sub">a private tracker — by akshit gupta</div>
+    </header>
+
+    <section class="login-section" id="loginSection">
+      <div class="section-label">Access Portal</div>
+      <div class="field">
+        <label for="uid">UID / Roll Number</label>
+        <input type="text" id="uid" placeholder="e.g. 21BCA1234" autocomplete="username" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label for="password">UIMS Password</label>
+        <input type="password" id="password" placeholder="••••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn" id="loginBtn" onclick="handleLogin()">Access →</button>
+      <div class="error-box" id="errorBox"></div>
+      <p class="notice">Connects directly to UIMS (uims.cuchd.in). Credentials are never stored.</p>
+    </section>
+
+    <section id="results">
+      <div class="profile-card" id="profileCard"></div>
+      <div class="overall-card" id="overallCard"></div>
+      <div>
+        <div class="section-label">Subjects</div>
+        <div id="subjectsList"></div>
+      </div>
+      <div class="logout-wrap">
+        <button class="btn-ghost" onclick="handleLogout()">← Log out</button>
+      </div>
+    </section>
+
+    <footer>vampire · cuims tracker · built for cu students</footer>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function classify(pct) {
+      if (pct >= 75) return "safe";
+      if (pct >= 65) return "warn";
+      return "danger";
+    }
+
+    function bunkCalc(present, total) {
+      const canBunk = Math.floor((present - 0.75 * total) / 0.75);
+      const needAttend = Math.ceil((0.75 * total - present) / 0.25);
+      return { canBunk: Math.max(canBunk, 0), needAttend: Math.max(needAttend, 0) };
+    }
+
+    function showError(msg) {
+      const box = document.getElementById("errorBox");
+      box.textContent = msg;
+      box.classList.add("show");
+    }
+
+    function clearError() {
+      document.getElementById("errorBox").classList.remove("show");
+    }
+
+    async function handleLogin() {
+      clearError();
+      const uid = document.getElementById("uid").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!uid || !password) { showError("Please enter both UID and password."); return; }
+
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true;
+      btn.textContent = "Connecting…";
+
+      try {
+        const resp = await fetch(API_BASE + "/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid, password }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) { showError(data.error || "Login failed."); return; }
+        renderResults(data);
+      } catch (err) {
+        showError("Cannot reach the server. Please try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Access →";
+      }
+    }
+
+    function renderResults(data) {
+      const { profile, subjects, message } = data;
+
+      document.getElementById("profileCard").innerHTML = `
+        <div class="profile-name">${profile.name || "Student"}</div>
+        <div class="profile-meta">
+          ${profile.uid ? `<div class="meta-item">UID <span>${profile.uid}</span></div>` : ""}
+          ${profile.course ? `<div class="meta-item">Programme <span>${profile.course}</span></div>` : ""}
+          ${profile.semester ? `<div class="meta-item">Semester <span>${profile.semester}</span></div>` : ""}
+          ${profile.section ? `<div class="meta-item">Section <span>${profile.section}</span></div>` : ""}
+        </div>`;
+
+      const overallCard = document.getElementById("overallCard");
+      if (subjects.length > 0) {
+        const avgPct = Math.round(subjects.reduce((s, sub) => s + sub.percentage, 0) / subjects.length);
+        const cls = classify(avgPct);
+        const totalPresent = subjects.reduce((s, sub) => s + sub.present, 0);
+        const totalClasses = subjects.reduce((s, sub) => s + sub.total, 0);
+        const { canBunk, needAttend } = bunkCalc(totalPresent, totalClasses);
+        overallCard.innerHTML = `
+          <div><div class="overall-label">Overall Attendance</div></div>
+          <div><div class="overall-pct ${cls}">${avgPct}%</div></div>
+          <div class="bunk-info">
+            ${cls === "safe"
+              ? `<strong style="color:#4a9a5a">${canBunk}</strong> classes can be skipped`
+              : `Need <strong style="color:#c0392b">${needAttend}</strong> more to reach 75%`}
+            <br/>${totalPresent}/${totalClasses} total
+          </div>`;
+      } else {
+        overallCard.innerHTML = `<div class="empty">${message || "No attendance data found."}</div>`;
+      }
+
+      document.getElementById("subjectsList").innerHTML = subjects.length === 0
+        ? `<div class="empty">${message || "No subjects found."}</div>`
+        : subjects.map((sub, i) => {
+            const cls = classify(sub.percentage);
+            const { canBunk, needAttend } = bunkCalc(sub.present, sub.total);
+            return `<div class="subject-item" style="animation-delay:${i*0.04}s">
+              <div>
+                <div class="subject-name">${sub.name}</div>
+                <div class="bar-wrap"><div class="bar-fill ${cls}" style="width:${Math.min(sub.percentage,100)}%"></div></div>
+                <div style="margin-top:6px;font-size:10px;color:#444;">
+                  ${cls === "safe"
+                    ? `<span style="color:#4a9a5a">Can skip ${canBunk}</span>`
+                    : `<span style="color:#c0392b">Need ${needAttend} more</span>`}
+                </div>
+              </div>
+              <div class="subject-stats">
+                <div class="subject-pct ${cls}">${sub.percentage}%</div>
+                <div class="subject-frac">${sub.present}/${sub.total}</div>
+              </div>
+            </div>`;
+          }).join("");
+
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("results").classList.add("show");
+    }
+
+    function handleLogout() {
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("results").classList.remove("show");
+      document.getElementById("uid").value = "";
+      document.getElementById("password").value = "";
+      clearError();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("password").addEventListener("keydown", e => { if (e.key === "Enter") handleLogin(); });
+      document.getElementById("uid").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("password").focus(); });
+    });
+  </script>
+</body>
+</html>
